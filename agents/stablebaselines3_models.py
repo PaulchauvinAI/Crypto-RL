@@ -12,6 +12,8 @@ from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.noise import NormalActionNoise
 from stable_baselines3.common.noise import OrnsteinUhlenbeckActionNoise
 from stable_baselines3.common.vec_env import DummyVecEnv
+from wandb.integration.sb3 import WandbCallback
+
 
 from meta import config
 from meta.env_stock_trading.env_stock_trading import StockTradingEnv
@@ -99,11 +101,11 @@ class DRLAgent:
         )
         return model
 
-    def train_model(self, model, tb_log_name, total_timesteps=5000):
+    def train_model(self, model, tb_log_name, callback, total_timesteps=5000):
         model = model.learn(
             total_timesteps=total_timesteps,
             tb_log_name=tb_log_name,
-            callback=TensorboardCallback(),
+            callback=callback,
         )
         return model
 
@@ -144,6 +146,7 @@ class DRLAgent:
         episode_total_assets = list()
         episode_total_assets.append(environment.initial_total_asset)
         done = False
+        # TODO add buy and hold strat
         while not done:
             action = model.predict(state)[0]
             state, reward, done, _ = environment.step(action)
@@ -152,6 +155,7 @@ class DRLAgent:
                 environment.cash
                 + (environment.price_array[environment.time] * environment.stocks).sum()
             )
+            assert environment.cash>0
             episode_total_assets.append(total_asset)
             episode_return = total_asset / environment.initial_total_asset
             episode_returns.append(episode_return)

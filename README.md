@@ -1,3 +1,12 @@
+## 
+
+models for sb3: {"a2c": A2C, "ddpg": DDPG, "td3": TD3, "sac": SAC, "ppo": PPO}
+supported time interval: '1m', '5m', '15m', '30m', '60m', '120m', '1d', '1w', '1M', also 1s with binance
+train trade_btc.py --model_name="ppo" --time_interval="1m"
+
+Test: python test_model.py --time_interval="5m" --model_name="sac" --model_path="./models/test_ddpg_1m/model" --long_period=True
+
+
 # FinRL-Meta: A Universe of Market Environments and Benchmarks for Data-Driven Financial Reinforcement Learning
 
 
