@@ -1,6 +1,7 @@
 from agents.elegantrl_models import DRLAgent as DRLAgent_erl
 from agents.rllib_models import DRLAgent as DRLAgent_rllib
 from agents.stablebaselines3_models import DRLAgent as DRLAgent_sb3
+from agents.stablebaselines3_models import DRLEnsembleAgent as DRLEnsembleAgent_sb3 
 from meta.data_processor import DataProcessor
 import os
 #install talib https://gist.github.com/brunocapelao/ed1b4f566fccf630e1fb749e5992e964
@@ -61,6 +62,11 @@ def train(start_date, end_date, ticker_list, data_source, time_interval,
     data_config = {'price_array': price_array,
                    'tech_array': tech_array,
                    'turbulence_array': turbulence_array}
+    
+    print("\n number of crypto that we are trading: ", len(price_array), "\n")
+    price_ratio = price_array[-1]/price_array[0]
+    print("The best buy and hold strategy has a return of : ", max(price_ratio), "on this period \n")
+    print("The mean buy and hold strategy with a same proportion of all the crypto is  : ", np.mean(price_ratio), "on this period \n")
 
     #build environment using processed data
     env_instance = env(config=data_config)
@@ -110,6 +116,7 @@ def train(start_date, end_date, ticker_list, data_source, time_interval,
         total_timesteps = kwargs.get('total_timesteps',1e7)
         agent_params = kwargs.get('agent_params')
         agent = DRLAgent_sb3(env = env_instance)
+        #agent = DRLEnsembleAgent_sb3(env = env_instance)
 
         model = agent.get_model(model_name, model_kwargs = agent_params)
         trained_model = agent.train_model(model=model, 

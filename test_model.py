@@ -8,6 +8,10 @@ from meta.data_processor import DataProcessor
 import numpy as np
 import fire
 
+
+#change the ticker list!!
+#TICKER_LIST = ['BTCUSDT','ETHUSDT','ADAUSDT','BNBUSDT','XRPUSDT',
+#                'SOLUSDT','DOTUSDT', 'DOGEUSDT','AVAXUSDT','UNIUSDT']
 TICKER_LIST = ['BTCUSDT','ETHUSDT','BNBUSDT','XRPUSDT']
 
 INDICATORS = ['macd', 'rsi', 'cci', 'dx'] #self-defined technical indicator list is NOT supported yet
@@ -36,13 +40,17 @@ def test(start_date, end_date, ticker_list, data_source, time_interval,
     }
     
     env_instance = env(config=env_config)
-
+    #breakpoint()
     # load elegantrl needs state dim, action dim and net dim
     net_dimension = kwargs.get("net_dimension", 2 ** 7)
     #current_working_dir = kwargs.get("current_working_dir", "./" + str(model_name))
     #current_working_dir = "./models.test_ddpg_1m/model"
+
     
-    print("price_array: ", len(price_array))
+    print("\n number of crypto that we are trading: ", len(price_array), "\n")
+    price_ratio = price_array[-1]/price_array[0]
+    print("The best buy and hold strategy has a return of : ", max(price_ratio), "on this period \n")
+    print("The mean buy and hold strategy with a same proportion of all the crypto is  : ", np.mean(price_ratio), "on this period \n")
 
     if drl_lib == "elegantrl":
         episode_total_assets = DRLAgent_erl.DRL_prediction(
