@@ -156,7 +156,7 @@ class DRLAgent:
                 environment.cash
                 + (environment.price_array[environment.time] * environment.stocks).sum()
             )
-            assert environment.cash>0
+            assert environment.cash > 0 
             episode_total_assets.append(total_asset)
             episode_return = total_asset / environment.initial_total_asset
             episode_returns.append(episode_return)

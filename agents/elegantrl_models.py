@@ -38,13 +38,15 @@ class DRLAgent:
             make a prediction in a test dataset and get results
     """
 
-    def __init__(self, env, price_array, tech_array, turbulence_array):
+    def __init__(self, env):
         self.env = env
+        """
         self.price_array = price_array
         self.tech_array = tech_array
         self.turbulence_array = turbulence_array
-
+        """
     def get_model(self, model_name, model_kwargs):
+        """
         env_config = {
             "price_array": self.price_array,
             "tech_array": self.tech_array,
@@ -52,11 +54,12 @@ class DRLAgent:
             "if_train": True,
         }
         env = self.env(config=env_config)
-        env.env_num = 1
+        """
+        self.env.env_num = 1
         agent = MODELS[model_name]
         if model_name not in MODELS:
             raise NotImplementedError("NotImplementedError")
-        model = Arguments(agent_class=agent, env=env)
+        model = Arguments(agent_class=agent, env=self.env)
         model.if_off_policy = model_name in OFF_POLICY_MODELS
         if model_kwargs is not None:
             try:

@@ -16,9 +16,11 @@ class CryptoEnv(gym.Env):  # custom env
         self.gamma = gamma
         self.price_array = config['price_array']
         self.tech_array = config['tech_array']
+        self.reward_type = config['reward_type']
         self._generate_action_normalizer()
         self.crypto_num = self.price_array.shape[1]
         self.max_step = self.price_array.shape[0] - lookback - 1
+
         
         # reset
         self.time = lookback-1
@@ -87,14 +89,18 @@ class CryptoEnv(gym.Env):  # custom env
         done = self.time == self.max_step
         state = self.get_state()
         next_total_asset = self.cash + (self.stocks * self.price_array[self.time]).sum()
-        #reward = (next_total_asset - self.total_asset) * 2 ** -16  
-        profit = (next_total_asset - self.total_asset) 
-        if profit > 0:
-            reward = 1
-        elif profit < 0:
-            reward = -1
+        #reward = (next_total_asset - self.total_asset) * 2 ** -16   #initial reward 
+        # TODO add config for sharpe ratio
+        if self.reward_type =="sharpe_ratio":
+            raise Exception("sharpe ratio reward not implemented")
         else:
-            reward=0
+            profit = (next_total_asset - self.total_asset) 
+            if profit > 0:
+                reward = 1
+            elif profit < 0:
+                reward = -1
+            else:
+                reward=0
 
         self.total_asset = next_total_asset
         self.gamma_return = self.gamma_return * self.gamma + reward 

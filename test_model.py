@@ -10,15 +10,15 @@ import fire
 
 
 #change the ticker list!!
-#TICKER_LIST = ['BTCUSDT','ETHUSDT','ADAUSDT','BNBUSDT','XRPUSDT',
-#                'SOLUSDT','DOTUSDT', 'DOGEUSDT','AVAXUSDT','UNIUSDT']
-TICKER_LIST = ['BTCUSDT','ETHUSDT','BNBUSDT','XRPUSDT']
+TICKER_LIST = ['BTCUSDT','ETHUSDT','ADAUSDT','BNBUSDT','XRPUSDT',
+               'SOLUSDT','DOTUSDT', 'DOGEUSDT','AVAXUSDT','UNIUSDT']
+#TICKER_LIST = ['BTCUSDT','ETHUSDT','BNBUSDT','XRPUSDT']
 
 INDICATORS = ['macd', 'rsi', 'cci', 'dx'] #self-defined technical indicator list is NOT supported yet
 env = CryptoEnv
 
 def test(start_date, end_date, ticker_list, data_source, time_interval,
-            technical_indicator_list, drl_lib, env, model_name,current_working_dir, if_vix=True,
+            technical_indicator_list, drl_lib, env, model_name,current_working_dir, reward_type,if_vix=True, 
             **kwargs):
   
     #process data using unified data processor
@@ -37,6 +37,7 @@ def test(start_date, end_date, ticker_list, data_source, time_interval,
         "tech_array": tech_array,
         "turbulence_array": turbulence_array,
         "if_train": False,
+        "reward_type": reward_type
     }
     
     env_instance = env(config=env_config)
@@ -87,7 +88,7 @@ def test(start_date, end_date, ticker_list, data_source, time_interval,
 
 
 # best so far model_path= ./models/test_ddpg_1m/model with time_interval = "1m" but also good with 
-def main(model_name= "ddpg", time_interval = "1m", model_path = "./models/test_ddpg_1m/model", long_period=False):
+def main(model_name= "ddpg", time_interval = "1m", model_path = "./models/test_ddpg_1m/model", long_period=False, reward_type="normal"):
     TEST_START_DATE, TEST_END_DATE = ('2021-09-19', '2022-01-23') if long_period else ('2021-05-31', '2021-06-11')
     account_value_erl = test(start_date = TEST_START_DATE, 
                             end_date = TEST_END_DATE,
@@ -100,6 +101,7 @@ def main(model_name= "ddpg", time_interval = "1m", model_path = "./models/test_d
                             model_name=model_name, 
                             current_working_dir=model_path, 
                             net_dimension = 2**9, 
+                            reward_type=reward_type,
                             if_vix=False
                             )
     #print("total asset list: ", account_value_erl)
