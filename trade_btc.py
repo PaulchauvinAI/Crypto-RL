@@ -40,8 +40,6 @@ In principle, all information can be used in the "state". In practice, you can d
 
 # from elegantrl.agents import AgentA2C
 
-MODELS = {"ddpg": AgentDDPG, "td3": AgentTD3, "sac": AgentSAC, "ppo": AgentPPO}
-OFF_POLICY_MODELS = ["ddpg", "td3", "sac"]
 ON_POLICY_MODELS = ["ppo"]
 """MODEL_KWARGS = {x: config.__dict__[f"{x.upper()}_PARAMS"] for x in MODELS.keys()}
 NOISE = {
@@ -65,7 +63,7 @@ RLlib_PARAMS = {"lr": 5e-5, "train_batch_size": 500, "gamma": 0.99}
 
 
 def train(start_date, end_date, ticker_list, data_source, time_interval, 
-          technical_indicator_list, drl_lib, env, model_name, reward_type, if_vix=True,
+          technical_indicator_list, drl_lib, model_save_freq, env, model_name, reward_type, if_vix=True,
           **kwargs):
     
     #process data using unified data processor
@@ -79,7 +77,7 @@ def train(start_date, end_date, ticker_list, data_source, time_interval,
                    'turbulence_array': turbulence_array, 
                    'reward_type': reward_type}
     
-    print("\n number of crypto that we are trading: ", len(price_array), "\n")
+    print("\n number of crypto that we are trading: {} and number of timeframes to evaluate the model: {} \n".format(price_array.shape[1], price_array.shape[0]))
     price_ratio = price_array[-1]/price_array[0]
     print("The best buy and hold strategy has a return of : ", max(price_ratio), "on this period \n")
     print("The mean buy and hold strategy with a same proportion of all the crypto is  : ", np.mean(price_ratio), "on this period \n")
@@ -114,7 +112,8 @@ def train(start_date, end_date, ticker_list, data_source, time_interval,
         agent_rllib = DRLAgent_rllib(env = env,
                        price_array=price_array,
                        tech_array=tech_array,
-                       turbulence_array=turbulence_array)
+                       turbulence_array=turbulence_array,
+                       reward_type=reward_type)
 
         model,model_config = agent_rllib.get_model(model_name)
         
@@ -134,10 +133,10 @@ def train(start_date, end_date, ticker_list, data_source, time_interval,
         #agent_params = kwargs.get('agent_params')
         agent = DRLAgent_sb3(env = env_instance)
         #agent = DRLEnsembleAgent_sb3(env = env_instance)
-        model = agent.get_model(model_name, model_kwargs = PPO_PARAMS)
+        model = agent.get_model(model_name)#, model_kwargs = PPO_PARAMS)
         trained_model = agent.train_model(model=model, 
                                 tb_log_name=model_name,
-                                callback=WandbCallback(model_save_path=f"models/{current_working_dir}", verbose=2, model_save_freq=100000),
+                                callback=WandbCallback(model_save_path=f"models/{current_working_dir}", verbose=2, model_save_freq=model_save_freq),
                                 total_timesteps=total_timesteps)
         
         print('Training finished!')
@@ -164,6 +163,10 @@ TRAIN_START_DATE = '2022-01-04' #BTC
 TRAIN_END_DATE = '2022-01-10'  #
 
 
+TRAIN_START_DATE = '2018-09-04' #BTC
+TRAIN_END_DATE = '2021-04-10'  #
+
+
 #TRAIN_START_DATE = '2022-01-18'
 #TRAIN_END_DATE = '2022-03-26' 
 
@@ -175,7 +178,10 @@ TRAIN_END_DATE = '2022-01-10'  #
 # models for sb3: {"a2c": A2C, "ddpg": DDPG, "td3": TD3, "sac": SAC, "ppo": PPO}
 # supported time interval: '1m', '5m', '15m', '30m', '60m', '120m', '1d', '1w', '1M'
 
-def main(model_name="ppo", time_interval="1m", reward_type="normal"):
+def main(model_name="ppo", time_interval="1m", reward_type="normal", drl_lib="stable_baselines3", model_save_freq=1e5):
+    # 1e5 => 10min to save models. 
+    # 
+    # drllib is eather stable_baselines3, elegantrl, or rllib
     current_working_dir='./test_{}_{}'.format(model_name, time_interval)
     train(start_date=TRAIN_START_DATE, 
         end_date=TRAIN_END_DATE,
@@ -183,12 +189,13 @@ def main(model_name="ppo", time_interval="1m", reward_type="normal"):
         data_source='binance',
         time_interval=time_interval, 
         technical_indicator_list=INDICATORS,
-        drl_lib='rllib', #'stable_baselines3',#'elegantrl', #, 
+        drl_lib=drl_lib,
+        model_save_freq=model_save_freq, 
         env=env, 
         model_name=model_name, 
         current_working_dir=current_working_dir,
         #erl_params=ERL_PARAMS, ####change everytime??
-        break_step=5e4,
+        break_step=5e4, #only for elegantrl
         reward_type = reward_type,
         if_vix=False
         )

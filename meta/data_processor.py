@@ -134,7 +134,7 @@ class DataProcessor:
         ticker_list: str,
         technical_indicator_list: List[str],
         if_vix: bool,
-        cache: bool = False,
+        cache: bool = True,
         select_stockstats_talib: int = 0,
     ):
 
@@ -143,7 +143,7 @@ class DataProcessor:
                 "Currently 1s interval data is only supported with 'binance' as data source"
             )
 
-        cache_filename = (
+        cache_folder = (
             "_".join(
                 ticker_list
                 + [
@@ -151,37 +151,65 @@ class DataProcessor:
                     self.start_date,
                     self.end_date,
                     self.time_interval,
-                ]
+                ] 
             )
-            + ".pickle"
+            
         )
-        cache_dir = "./cache"
-        cache_path = os.path.join(cache_dir, cache_filename)
 
-        if cache and os.path.isfile(cache_path):
-            print(f"Using cached file {cache_path}")
-            self.tech_indicator_list = technical_indicator_list
-            with open(cache_path, "rb") as handle:
-                self.processor.dataframe = pickle.load(handle)
+        cache_path = os.path.join("./cache", cache_folder)
+        price_array_path = os.path.join(cache_path, "price_array.pickle")
+        indicators_path = os.path.join(cache_path, "_".join(technical_indicator_list) + ".pickle")
+        turbulence_array_path = os.path.join(cache_path, "turbulence.pickle")
+
+        are_files = [os.path.isfile(file) for file in [indicators_path, price_array_path, turbulence_array_path]]
+        if sum(are_files)==3: #### change
+            print(f"Using cached folder {cache_path}")
+            with open(price_array_path, "rb") as handle:
+                price_array = pickle.load(handle)
+            with open(indicators_path, "rb") as handle:
+                tech_array = pickle.load(handle)
+            with open(turbulence_array_path, "rb") as handle:
+                turbulence_array = pickle.load(handle)
+
         else:
             self.download_data(ticker_list)
             self.clean_data()
-            if cache:
-                if not os.path.exists(cache_dir):
-                    os.mkdir(cache_dir)
-                with open(cache_path, "wb") as handle:
-                    pickle.dump(
-                        self.dataframe,
-                        handle,
-                        protocol=pickle.HIGHEST_PROTOCOL,
-                    )
+            self.add_technical_indicator(technical_indicator_list, select_stockstats_talib)
+            if if_vix:
+                self.add_vix()
+            price_array, tech_array, turbulence_array = self.df_to_array(if_vix)
+            tech_nan_positions = np.isnan(tech_array)
+            tech_array[tech_nan_positions] = 0
 
-        self.add_technical_indicator(technical_indicator_list, select_stockstats_talib)
-        if if_vix:
-            self.add_vix()
-        price_array, tech_array, turbulence_array = self.df_to_array(if_vix)
-        tech_nan_positions = np.isnan(tech_array)
-        tech_array[tech_nan_positions] = 0
+            if not os.path.exists(cache_path):
+                os.mkdir(cache_path)
+
+            with open(price_array_path, "wb") as handle:
+                pickle.dump(
+                    price_array,
+                    handle,
+                    protocol=pickle.HIGHEST_PROTOCOL,
+                )
+            with open(indicators_path, "wb") as handle:
+                pickle.dump(
+                    tech_array,
+                    handle,
+                    protocol=pickle.HIGHEST_PROTOCOL,
+                )
+            with open(turbulence_array_path, "wb") as handle:
+                pickle.dump(
+                    turbulence_array,
+                    handle,
+                    protocol=pickle.HIGHEST_PROTOCOL,
+                )
+            """
+            with open(self.dataframe, "wb") as handle:
+                pickle.dump(
+                    self.processor.dataframe,
+                    handle,
+                    protocol=pickle.HIGHEST_PROTOCOL,
+                )
+            """
 
         return price_array, tech_array, turbulence_array
 

@@ -42,6 +42,8 @@ TD3_PARAMS = {
     "buffer_size": 1000000,
     "learning_rate": 0.001,
 }
+
+
 SAC_PARAMS = {
     "batch_size": 64,
     "buffer_size": 100000,
@@ -58,6 +60,15 @@ ERL_PARAMS = {
     "target_step": 5000,
     "eval_gap": 30,
 }
+
+
+### DQN params to find !!! these are random
+DQN_PARAMS = {
+    "batch_size": 100,
+    "buffer_size": 1000000,
+    "learning_rate": 0.001,
+}
+
 RLlib_PARAMS = {"lr": 5e-5, "train_batch_size": 500, "gamma": 0.99}
 
 

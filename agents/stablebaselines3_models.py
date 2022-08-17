@@ -8,6 +8,7 @@ from stable_baselines3 import DDPG
 from stable_baselines3 import PPO
 from stable_baselines3 import SAC
 from stable_baselines3 import TD3
+from stable_baselines3 import DQN
 from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.noise import NormalActionNoise
 from stable_baselines3.common.noise import OrnsteinUhlenbeckActionNoise
@@ -21,7 +22,7 @@ from meta.env_stock_trading.env_stock_trading import StockTradingEnv
 # RL models from stable-baselines
 
 
-MODELS = {"a2c": A2C, "ddpg": DDPG, "td3": TD3, "sac": SAC, "ppo": PPO}
+MODELS = {"a2c": A2C, "ddpg": DDPG, "td3": TD3, "sac": SAC, "ppo": PPO, "dqn": DQN}
 
 MODEL_KWARGS = {x: config.__dict__[f"{x.upper()}_PARAMS"] for x in MODELS.keys()}
 
@@ -90,6 +91,7 @@ class DRLAgent:
                 mean=np.zeros(n_actions), sigma=0.1 * np.ones(n_actions)
             )
         print(model_kwargs)
+        #breakpoint()
         model = MODELS[model_name](
             policy=policy,
             env=self.env,
@@ -105,6 +107,7 @@ class DRLAgent:
         model = model.learn(
             total_timesteps=total_timesteps,
             tb_log_name=tb_log_name,
+            eval_freq=-1,
             callback=callback,
         )
         return model
@@ -167,6 +170,47 @@ class DRLAgent:
 
 
 class DRLEnsembleAgent:
+
+    def __init__(
+        self,
+        df,
+        train_period,
+        val_test_period,
+        rebalance_window,
+        validation_window,
+        stock_dim,
+        hmax,
+        initial_amount,
+        buy_cost_pct,
+        sell_cost_pct,
+        reward_scaling,
+        state_space,
+        action_space,
+        tech_indicator_list,
+        print_verbosity,
+    ):
+
+        self.df = df
+        self.train_period = train_period
+        self.val_test_period = val_test_period
+
+        self.unique_trade_date = df[
+            (df.date > val_test_period[0]) & (df.date <= val_test_period[1])
+        ].date.unique()
+        self.rebalance_window = rebalance_window
+        self.validation_window = validation_window
+
+        self.stock_dim = stock_dim
+        self.hmax = hmax
+        self.initial_amount = initial_amount
+        self.buy_cost_pct = buy_cost_pct
+        self.sell_cost_pct = sell_cost_pct
+        self.reward_scaling = reward_scaling
+        self.state_space = state_space
+        self.action_space = action_space
+        self.tech_indicator_list = tech_indicator_list
+        self.print_verbosity = print_verbosity
+        
     @staticmethod
     def get_model(
         model_name,
@@ -228,45 +272,6 @@ class DRLEnsembleAgent:
         )
         return sharpe
 
-    def __init__(
-        self,
-        df,
-        train_period,
-        val_test_period,
-        rebalance_window,
-        validation_window,
-        stock_dim,
-        hmax,
-        initial_amount,
-        buy_cost_pct,
-        sell_cost_pct,
-        reward_scaling,
-        state_space,
-        action_space,
-        tech_indicator_list,
-        print_verbosity,
-    ):
-
-        self.df = df
-        self.train_period = train_period
-        self.val_test_period = val_test_period
-
-        self.unique_trade_date = df[
-            (df.date > val_test_period[0]) & (df.date <= val_test_period[1])
-        ].date.unique()
-        self.rebalance_window = rebalance_window
-        self.validation_window = validation_window
-
-        self.stock_dim = stock_dim
-        self.hmax = hmax
-        self.initial_amount = initial_amount
-        self.buy_cost_pct = buy_cost_pct
-        self.sell_cost_pct = sell_cost_pct
-        self.reward_scaling = reward_scaling
-        self.state_space = state_space
-        self.action_space = action_space
-        self.tech_indicator_list = tech_indicator_list
-        self.print_verbosity = print_verbosity
 
     def DRL_validation(self, model, test_data, test_env, test_obs):
         """validation process"""

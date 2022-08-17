@@ -43,9 +43,13 @@ class CryptoEnv(gym.Env):  # custom env
         self.if_discrete = False
         self.target_return = 10
         # added
+        self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, shape=(self.state_dim,), dtype=np.uint8)
+        #
+
+
+        #self.action_space = gym.spaces.Discrete(3, start=-1)
+        #self.action_space = gym.spaces.Box(low=np.ones(self.action_dim) * -1, high=np.ones(self.action_dim), dtype=np.int_)
         self.action_space = gym.spaces.Box(low=-1, high=1, shape=(self.action_dim,)) #-1, 0 or 1
-        self.observation_space = gym.spaces.Box(
-                                            low=-np.inf, high=np.inf, shape=(self.state_dim,), dtype=np.uint8)
 
 
 
@@ -89,11 +93,13 @@ class CryptoEnv(gym.Env):  # custom env
         done = self.time == self.max_step
         state = self.get_state()
         next_total_asset = self.cash + (self.stocks * self.price_array[self.time]).sum()
-        #reward = (next_total_asset - self.total_asset) * 2 ** -16   #initial reward 
+        #
         # TODO add config for sharpe ratio
         if self.reward_type =="sharpe_ratio":
             raise Exception("sharpe ratio reward not implemented")
         else:
+            reward = (next_total_asset - self.total_asset) * 2 ** -16   #initial reward 
+            """
             profit = (next_total_asset - self.total_asset) 
             if profit > 0:
                 reward = 1
@@ -101,6 +107,7 @@ class CryptoEnv(gym.Env):  # custom env
                 reward = -1
             else:
                 reward=0
+            """
 
         self.total_asset = next_total_asset
         self.gamma_return = self.gamma_return * self.gamma + reward 
