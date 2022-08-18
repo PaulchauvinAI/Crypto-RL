@@ -13,7 +13,6 @@ from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.noise import NormalActionNoise
 from stable_baselines3.common.noise import OrnsteinUhlenbeckActionNoise
 from stable_baselines3.common.vec_env import DummyVecEnv
-from wandb.integration.sb3 import WandbCallback
 
 
 from meta import config
@@ -91,7 +90,6 @@ class DRLAgent:
                 mean=np.zeros(n_actions), sigma=0.1 * np.ones(n_actions)
             )
         print(model_kwargs)
-        #breakpoint()
         model = MODELS[model_name](
             policy=policy,
             env=self.env,
@@ -159,7 +157,7 @@ class DRLAgent:
                 environment.cash
                 + (environment.price_array[environment.time] * environment.stocks).sum()
             )
-            assert environment.cash > 0 
+            assert environment.cash > 0
             episode_total_assets.append(total_asset)
             episode_return = total_asset / environment.initial_total_asset
             episode_returns.append(episode_return)
@@ -170,7 +168,6 @@ class DRLAgent:
 
 
 class DRLEnsembleAgent:
-
     def __init__(
         self,
         df,
@@ -210,7 +207,7 @@ class DRLEnsembleAgent:
         self.action_space = action_space
         self.tech_indicator_list = tech_indicator_list
         self.print_verbosity = print_verbosity
-        
+
     @staticmethod
     def get_model(
         model_name,
@@ -271,7 +268,6 @@ class DRLEnsembleAgent:
             / df_total_value["daily_return"].std()
         )
         return sharpe
-
 
     def DRL_validation(self, model, test_data, test_env, test_obs):
         """validation process"""

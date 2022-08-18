@@ -9,10 +9,6 @@ This repo is a fork from FinRL-Meta  ([website](https://finrl.readthedocs.io/en/
 + To reduce the simulation-reality gap: existing works use backtesting on historical data, while the actual performance may be quite different.
 + To reduce the data pre-processing burden, so that quants can focus on developing and optimizing strategies.
 
-<div align="center">
-<img align="center" src=figs/finrl_meta_dataops.png width="800">
-</div>
-
 
 Supported Data Sources:
 |Data Source |Type |Range and Frequency |Request Limits|Raw Data|Preprocessed Data|
@@ -60,21 +56,25 @@ Such a unified pipeline also allows fair comparisons among different algorithms.
 
 ## To use it
 Right now only the following models are available: 
+```
 {"a2c": A2C, "ddpg": DDPG, "td3": TD3, "sac": SAC, "ppo": PPO}
-
-and the following time interval to trade the asset:
-'1m', '5m', '15m', '30m', '60m', '120m', '1d', '1w', '1M', 
+``` 
+and the time_interval to trade the asset must be in:
+```
+['1m', '5m', '15m', '30m', '60m', '120m', '1d', '1w', '1M']
+```
 
 ### Training
+```
+python train.py --model_name="ppo" --time_interval="1d" 
+```
 
-python train.py --model_name="ppo" --time_interval="1m" 
-
-It will save the model to ./models/test_ppo_1m/model
+It will save the model to ./models/test_ppo_1d/model
 
 
 ### Backtesting
-
-python test_model.py --time_interval="30m" --model_path="./models/test_ppo_30m/model" 
-
+```
+python test_model.py --model_path="./models/test_ppo_30m/model" 
+```
 
 **Disclaimer: Nothing herein is financial advice, and NOT a recommendation to trade real money. Please use common sense and always first consult a professional before trading or investing.**
