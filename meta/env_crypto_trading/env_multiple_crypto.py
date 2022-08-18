@@ -3,10 +3,19 @@ import math
 import numpy as np
 import gym
 
+
 class CryptoEnv(gym.Env):  # custom env
     metadata = {"render.modes": ["human"]}
-    def __init__(self, config, lookback=1, initial_capital=1e3, 
-                 buy_cost_pct=1e-3, sell_cost_pct=1e-3, gamma=0.99):
+
+    def __init__(
+        self,
+        config,
+        lookback=1,
+        initial_capital=1e3,
+        buy_cost_pct=1e-3,
+        sell_cost_pct=1e-3,
+        gamma=0.99,
+    ):
         self.lookback = lookback
         self.initial_total_asset = initial_capital
         self.initial_cash = initial_capital
@@ -14,54 +23,53 @@ class CryptoEnv(gym.Env):  # custom env
         self.sell_cost_pct = sell_cost_pct
         self.max_stock = 1
         self.gamma = gamma
-        self.price_array = config['price_array']
-        self.tech_array = config['tech_array']
-        self.reward_type = config['reward_type']
+        self.price_array = config["price_array"]
+        self.tech_array = config["tech_array"]
+        self.reward_type = config["reward_type"]
         self._generate_action_normalizer()
         self.crypto_num = self.price_array.shape[1]
         self.max_step = self.price_array.shape[0] - lookback - 1
 
-        
         # reset
-        self.time = lookback-1
+        self.time = lookback - 1
         self.cash = self.initial_cash
         self.current_price = self.price_array[self.time]
         self.current_tech = self.tech_array[self.time]
         self.stocks = np.zeros(self.crypto_num, dtype=np.float32)
 
         self.total_asset = self.cash + (self.stocks * self.price_array[self.time]).sum()
-        self.episode_return = 0.0  
+        self.episode_return = 0.0
         self.gamma_return = 0.0
 
-
-        
-
-        '''env information'''
-        self.env_name = 'MulticryptoEnv'
-        self.state_dim = 1 + (self.price_array.shape[1] + self.tech_array.shape[1])*lookback #cash + (prix + num_indicateurs)*n_crypto * lookback
+        """env information"""
+        self.env_name = "MulticryptoEnv"
+        self.state_dim = (
+            1 + (self.price_array.shape[1] + self.tech_array.shape[1]) * lookback
+        )  # cash + (prix + num_indicateurs)*n_crypto * lookback
         self.action_dim = self.price_array.shape[1]
         self.if_discrete = False
         self.target_return = 10
         # added
-        self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, shape=(self.state_dim,), dtype=np.uint8)
+        self.observation_space = gym.spaces.Box(
+            low=-np.inf, high=np.inf, shape=(self.state_dim,), dtype=np.uint8
+        )
         #
 
-
-        #self.action_space = gym.spaces.Discrete(3, start=-1)
-        #self.action_space = gym.spaces.Box(low=np.ones(self.action_dim) * -1, high=np.ones(self.action_dim), dtype=np.int_)
-        self.action_space = gym.spaces.Box(low=-1, high=1, shape=(self.action_dim,)) #-1, 0 or 1
-
-
-
+        # self.action_space = gym.spaces.Discrete(3, start=-1)
+        # TODO change with MultiDiscrete env
+        # self.action_space = gym.spaces.Box(low=np.ones(self.action_dim) * -1, high=np.ones(self.action_dim), dtype=np.int_)
+        self.action_space = gym.spaces.Box(
+            low=-1, high=1, shape=(self.action_dim,)
+        )  # -1, 0 or 1
 
     def reset(self) -> np.ndarray:
-        self.time = self.lookback-1
+        self.time = self.lookback - 1
         self.current_price = self.price_array[self.time]
         self.current_tech = self.tech_array[self.time]
         self.cash = self.initial_cash  # reset()
         self.stocks = np.zeros(self.crypto_num, dtype=np.float32)
         self.total_asset = self.cash + (self.stocks * self.price_array[self.time]).sum()
-        
+
         state = self.get_state()
         return state
 
@@ -70,22 +78,27 @@ class CryptoEnv(gym.Env):  # custom env
 
     def step(self, actions):
         self.time += 1
-        
+
         price = self.price_array[self.time]
         for i in range(self.action_dim):
-            
+
             norm_vector_i = self.action_norm_vector[i]
             actions[i] = actions[i] * norm_vector_i
-            
+
         for index in np.where(actions < 0)[0]:  # sell_index:
             if price[index] > 0:  # Sell only if current asset is > 0
                 sell_num_shares = min(self.stocks[index], -actions[index])
                 self.stocks[index] -= sell_num_shares
                 self.cash += price[index] * sell_num_shares * (1 - self.sell_cost_pct)
-                
+
         for index in np.where(actions > 0)[0]:  # buy_index:
-            if price[index] > 0:  # Buy only if the price is > 0 (no missing data in this particular date)
-                buy_num_shares = min(self.cash // (price[index] * (1 + self.buy_cost_pct)), actions[index])
+            if (
+                price[index] > 0
+            ):  # Buy only if the price is > 0 (no missing data in this particular date)
+                buy_num_shares = min(
+                    self.cash // (price[index] * (1 + self.buy_cost_pct)),
+                    actions[index],
+                )
                 self.stocks[index] += buy_num_shares
                 self.cash -= price[index] * buy_num_shares * (1 + self.buy_cost_pct)
 
@@ -95,10 +108,10 @@ class CryptoEnv(gym.Env):  # custom env
         next_total_asset = self.cash + (self.stocks * self.price_array[self.time]).sum()
         #
         # TODO add config for sharpe ratio
-        if self.reward_type =="sharpe_ratio":
+        if self.reward_type == "sharpe_ratio":
             raise Exception("sharpe ratio reward not implemented")
         else:
-            reward = (next_total_asset - self.total_asset) * 2 ** -16   #initial reward 
+            reward = (next_total_asset - self.total_asset) * 2**-16  # initial reward
             """
             profit = (next_total_asset - self.total_asset) 
             if profit > 0:
@@ -110,7 +123,7 @@ class CryptoEnv(gym.Env):  # custom env
             """
 
         self.total_asset = next_total_asset
-        self.gamma_return = self.gamma_return * self.gamma + reward 
+        self.gamma_return = self.gamma_return * self.gamma + reward
         self.cumu_return = self.total_asset / self.initial_cash
         if done:
             reward = self.gamma_return
@@ -119,13 +132,13 @@ class CryptoEnv(gym.Env):  # custom env
         return state, reward, done, {}
 
     def get_state(self):
-        state =  np.hstack((self.cash * 2 ** -18, self.stocks * 2 ** -3))
+        state = np.hstack((self.cash * 2**-18, self.stocks * 2**-3))
         for i in range(self.lookback):
-            tech_i = self.tech_array[self.time-i]
-            normalized_tech_i = tech_i * 2 ** -15
+            tech_i = self.tech_array[self.time - i]
+            normalized_tech_i = tech_i * 2**-15
             state = np.hstack((state, normalized_tech_i)).astype(np.float32)
         return state
-    
+
     def close(self):
         pass
 
@@ -133,10 +146,8 @@ class CryptoEnv(gym.Env):  # custom env
         action_norm_vector = []
         price_0 = self.price_array[0]
         for price in price_0:
-            x = math.floor(math.log(price, 10)) #the order of magnitude 
-            action_norm_vector.append(1/((10)**x)) 
-            
+            x = math.floor(math.log(price, 10))  # the order of magnitude
+            action_norm_vector.append(1 / ((10) ** x))
+
         action_norm_vector = np.asarray(action_norm_vector) * 10000
         self.action_norm_vector = np.asarray(action_norm_vector)
-
-

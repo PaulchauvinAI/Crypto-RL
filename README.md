@@ -64,6 +64,14 @@ and the time_interval to trade the asset must be in:
 ['1m', '5m', '15m', '30m', '60m', '120m', '1d', '1w', '1M']
 ```
 
+### Install
+1) Install python 3.9
+2) Install requirements, eg.
+
+```
+pip install -r requirements.txt
+```
+
 ### Training
 ```
 python train.py --model_name="ppo" --time_interval="1d" 
@@ -74,7 +82,7 @@ It will save the model to ./models/test_ppo_1d/model
 
 ### Backtesting
 ```
-python test_model.py --model_path="./models/test_ppo_30m/model" 
+python test_model.py --model_path="./models/test_ppo_1d/model" 
 ```
 
 **Disclaimer: Nothing herein is financial advice, and NOT a recommendation to trade real money. Please use common sense and always first consult a professional before trading or investing.**
