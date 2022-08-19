@@ -1,4 +1,4 @@
-# FinRL-Meta: A simple proof of concept for crypto currency trading with reinforcement learning.
+# Crypto-RL: A simple proof of concept for crypto currency trading with reinforcement learning.
 
 
 This repo is a fork from FinRL-Meta  ([website](https://finrl.readthedocs.io/en/latest/finrl_meta/background.html)) that builds a universe of market environments for data-driven financial reinforcement learning. This fork foccuses on the trading of crypto assets using deep RL methods.
