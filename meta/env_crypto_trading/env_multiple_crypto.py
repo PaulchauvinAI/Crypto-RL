@@ -26,6 +26,7 @@ class CryptoEnv(gym.Env):  # custom env
         self.price_array = config["price_array"]
         self.tech_array = config["tech_array"]
         self.reward_type = config["reward_type"]
+        self.use_wandb = config["use_wandb"]
         self._generate_action_normalizer()
         self.crypto_num = self.price_array.shape[1]
         self.max_step = self.price_array.shape[0] - lookback - 1
@@ -132,9 +133,13 @@ class CryptoEnv(gym.Env):  # custom env
             print(
                 f"Episode return = {self.episode_return} \n Sharpe ratio = {sharpe_ratio}"
             )
-            wandb.log(
-                {"Episode return": self.episode_return, "Sharpe ratio": sharpe_ratio}
-            )
+            if self.use_wandb:
+                wandb.log(
+                    {
+                        "Episode return": self.episode_return,
+                        "Sharpe ratio": sharpe_ratio,
+                    }
+                )
             reward = self.gamma_return
         return state, reward, done, {}
 

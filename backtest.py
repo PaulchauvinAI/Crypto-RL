@@ -3,8 +3,6 @@ import numpy as np
 import fire
 
 from agents.stablebaselines3_models import DRLAgent as DRLAgent_sb3
-from agents.rllib_models import DRLAgent as DRLAgent_rllib
-from agents.elegantrl_models import DRLAgent as DRLAgent_erl
 from meta.env_crypto_trading.env_multiple_crypto import CryptoEnv
 
 # import data processor
@@ -43,14 +41,10 @@ def test(
         "turbulence_array": turbulence_array,
         "if_train": False,
         "reward_type": reward_type,
+        "use_wandb": False,
     }
 
     env_instance = env(config=env_config)
-    # breakpoint()
-    # load elegantrl needs state dim, action dim and net dim
-    net_dimension = kwargs.get("net_dimension", 2**7)
-    # current_working_dir = kwargs.get("current_working_dir", "./" + str(model_name))
-    # current_working_dir = "./models.test_ddpg_1m/model"
 
     print(
         "\n number of crypto that we are trading: {} and number of timeframes to evaluate the model: {} \n".format(
@@ -69,34 +63,14 @@ def test(
         "on this period \n",
     )
 
-    if drl_lib == "elegantrl":
-        episode_total_assets = DRLAgent_erl.DRL_prediction(
-            model_name=model_name,
-            cwd=current_working_dir,
-            net_dimension=net_dimension,
-            environment=env_instance,
-        )
-
-        return episode_total_assets
-
-    elif drl_lib == "rllib":
+    if drl_lib == "rllib":
         # load agent
-        episode_total_assets = DRLAgent_rllib.DRL_prediction(
-            model_name=model_name,
-            env=env,
-            price_array=price_array,
-            tech_array=tech_array,
-            turbulence_array=turbulence_array,
-            agent_path=current_working_dir,
-        )
-
-        return episode_total_assets
+        raise AssertionError("not implemented yet for rllib")
 
     elif drl_lib == "stable_baselines3":
         episode_total_assets = DRLAgent_sb3.DRL_prediction_load_from_file(
             model_name=model_name, environment=env_instance, cwd=current_working_dir
         )
-
         return episode_total_assets
     else:
         raise ValueError("DRL library input is NOT supported. Please check.")

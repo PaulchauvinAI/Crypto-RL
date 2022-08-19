@@ -1,14 +1,10 @@
-import os
 import numpy as np
 import fire
 import wandb
 from wandb.integration.sb3 import WandbCallback
-from agents.elegantrl_models import DRLAgent as DRLAgent_erl
-from agents.rllib_models import DRLAgent as DRLAgent_rllib
 from agents.stablebaselines3_models import DRLAgent as DRLAgent_sb3
 from agents.stablebaselines3_models import TensorboardCallback
 
-# from agents.stablebaselines3_models import DRLEnsembleAgent as DRLEnsembleAgent_sb3
 from meta.data_processor import DataProcessor
 from meta.env_crypto_trading.env_multiple_crypto import CryptoEnv
 
@@ -46,6 +42,7 @@ def train(
         "tech_array": tech_array,
         "turbulence_array": turbulence_array,
         "reward_type": reward_type,
+        "use_wandb": use_wandb,
     }
 
     print(
@@ -71,51 +68,8 @@ def train(
     # read parameters and load agents
     current_working_dir = kwargs.get("current_working_dir", "./")
 
-    if drl_lib == "elegantrl":
-        break_step = kwargs.get("break_step", 1e6)
-        agent = DRLAgent_erl(env=env_instance)
-        ERL_PARAMS = {
-            "learning_rate": 2**-15,
-            "batch_size": 2**11,
-            "gamma": 0.99,
-            "seed": 312,
-            "net_dimension": 2**9,
-            "target_step": 5000,
-            "eval_gap": 30,
-            "eval_times": 1,
-        }
-        model = agent.get_model(model_name, model_kwargs=ERL_PARAMS)
-
-        agent.train_model(
-            model=model, cwd=current_working_dir, total_timesteps=break_step
-        )
-
-    elif drl_lib == "rllib":
-        # Only works with gpu instance? Tensorflow is needed
-        total_episodes = kwargs.get("total_episodes", 100)
-        # rllib_params = kwargs.get('rllib_params')
-        agent_rllib = DRLAgent_rllib(
-            env=env,
-            price_array=price_array,
-            tech_array=tech_array,
-            turbulence_array=turbulence_array,
-            reward_type=reward_type,
-        )
-        RLlib_PARAMS = {"lr": 5e-5, "train_batch_size": 500, "gamma": 0.99}
-
-        model, model_config = agent_rllib.get_model(model_name)
-
-        model_config["lr"] = RLlib_PARAMS["lr"]
-        model_config["train_batch_size"] = RLlib_PARAMS["train_batch_size"]
-        model_config["gamma"] = RLlib_PARAMS["gamma"]
-
-        trained_model = agent_rllib.train_model(
-            model=model,
-            model_name=model_name,
-            model_config=model_config,
-            total_episodes=total_episodes,
-        )
-        trained_model.save(current_working_dir)
+    if drl_lib == "rllib":
+        raise AssertionError("Rllib is not yet implemented")
 
     elif drl_lib == "stable_baselines3":
         if use_wandb:
@@ -205,25 +159,6 @@ def main(
         use_wandb=use_wandb,
         if_vix=False,
     )
-
-    ## if users want to use rllib, or stable-baselines3, users can remove the following comments
-
-    # # demo for rllib
-    # import ray
-    # ray.shutdown()  # always shutdown previous session if any
-    # train(
-    #     start_date=TRAIN_START_DATE,
-    #     end_date=TRAIN_END_DATE,
-    #     ticker_list=DOW_30_TICKER,
-    #     data_source="yahoofinance",
-    #     time_interval="1D",
-    #     technical_indicator_list=INDICATORS,
-    #     drl_lib="rllib",
-    #     env=env,
-    #     model_name="ppo",
-    #     cwd="./test_ppo",
-    #     rllib_params=RLlib_PARAMS,
-    #     total_episodes=30,
 
 
 if __name__ == "__main__":
