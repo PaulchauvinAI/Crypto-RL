@@ -141,6 +141,7 @@ class CryptoEnv(gym.Env):  # custom env
                     }
                 )
             reward = self.gamma_return
+        self.state = state
         return state, reward, done, {}
 
     def get_state(self):
