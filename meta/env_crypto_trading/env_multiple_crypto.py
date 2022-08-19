@@ -1,7 +1,7 @@
-import math
-
 import numpy as np
 import gym
+
+import wandb
 
 
 class CryptoEnv(gym.Env):  # custom env
@@ -57,6 +57,7 @@ class CryptoEnv(gym.Env):  # custom env
 
         # self.action_space = gym.spaces.Discrete(3, start=-1)
         # TODO change with MultiDiscrete env
+        # self.action_space = gym.spaces.MultiDiscrete(3, start=-1)
         # self.action_space = gym.spaces.Box(low=np.ones(self.action_dim) * -1, high=np.ones(self.action_dim), dtype=np.int_)
         self.action_space = gym.spaces.Box(
             low=-1, high=1, shape=(self.action_dim,)
@@ -70,6 +71,8 @@ class CryptoEnv(gym.Env):  # custom env
         self.stocks = np.zeros(self.crypto_num, dtype=np.float32)
         self.total_asset = self.cash + (self.stocks * self.price_array[self.time]).sum()
 
+        self.return_list = []
+
         state = self.get_state()
         return state
 
@@ -78,12 +81,10 @@ class CryptoEnv(gym.Env):  # custom env
 
     def step(self, actions):
         self.time += 1
-
         price = self.price_array[self.time]
-        for i in range(self.action_dim):
 
-            norm_vector_i = self.action_norm_vector[i]
-            actions[i] = actions[i] * norm_vector_i
+        # normalize action to buy or sell reasonnable amounts of the assets
+        actions = self.action_norm_vector * actions
 
         for index in np.where(actions < 0)[0]:  # sell_index:
             if price[index] > 0:  # Sell only if current asset is > 0
@@ -111,43 +112,48 @@ class CryptoEnv(gym.Env):  # custom env
         if self.reward_type == "sharpe_ratio":
             raise Exception("sharpe ratio reward not implemented")
         else:
-            reward = (next_total_asset - self.total_asset) * 2**-16  # initial reward
-            """
-            profit = (next_total_asset - self.total_asset) 
+            # reward = (next_total_asset - self.total_asset) * 2**-16  # initial reward
+            profit = next_total_asset - self.total_asset
             if profit > 0:
                 reward = 1
             elif profit < 0:
                 reward = -1
             else:
-                reward=0
-            """
+                reward = 0
 
+        self.return_list.append(next_total_asset / self.total_asset - 1)
         self.total_asset = next_total_asset
         self.gamma_return = self.gamma_return * self.gamma + reward
-        self.cumu_return = self.total_asset / self.initial_cash
         if done:
-            reward = self.gamma_return
+            return_array = np.asarray(self.return_list)
+            sharpe_ratio = return_array.mean() / return_array.std()
+
             self.episode_return = self.total_asset / self.initial_cash
-        self.state = state
+            print(
+                f"Episode return = {self.episode_return} \n Sharpe ratio = {sharpe_ratio}"
+            )
+            wandb.log(
+                {"Episode return": self.episode_return, "Sharpe ratio": sharpe_ratio}
+            )
+            reward = self.gamma_return
         return state, reward, done, {}
 
     def get_state(self):
-        state = np.hstack((self.cash * 2**-18, self.stocks * 2**-3))
+        # state = np.hstack((self.cash * 2**-18, self.stocks * 2**-3))
+        state = np.hstack((self.cash, self.stocks))
+        # TODO remove for loop
         for i in range(self.lookback):
             tech_i = self.tech_array[self.time - i]
-            normalized_tech_i = tech_i * 2**-15
-            state = np.hstack((state, normalized_tech_i)).astype(np.float32)
+            # normalized_tech_i = tech_i * 2**-15  # why is it normalized like this??
+            # state = np.hstack((state, normalized_tech_i)).astype(np.float32)
+            state = np.hstack((state, tech_i)).astype(np.float32)
         return state
 
     def close(self):
         pass
 
     def _generate_action_normalizer(self):
-        action_norm_vector = []
         price_0 = self.price_array[0]
-        for price in price_0:
-            x = math.floor(math.log(price, 10))  # the order of magnitude
-            action_norm_vector.append(1 / ((10) ** x))
 
-        action_norm_vector = np.asarray(action_norm_vector) * 10000
-        self.action_norm_vector = np.asarray(action_norm_vector)
+        magnitude = np.floor(np.log10(price_0))  # order of magnitude
+        self.action_norm_vector = 1 / 10**magnitude
