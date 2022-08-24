@@ -52,7 +52,6 @@ Such a unified pipeline also allows fair comparisons among different algorithms.
 
 - Add the possibility to trade new assets like futures.
 - Add other reward functions.
-- 
 
 ## To use it
 Right now only the following models are available: 
@@ -71,6 +70,8 @@ and the time_interval to trade the asset must be in:
 ```
 pip install -r requirements.txt
 ```
+If you are not able to install talib follow steps at https://mrjbq7.github.io/ta-lib/install.html
+
 
 ### Training
 ```

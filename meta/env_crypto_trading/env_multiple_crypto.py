@@ -54,15 +54,10 @@ class CryptoEnv(gym.Env):  # custom env
         self.observation_space = gym.spaces.Box(
             low=-np.inf, high=np.inf, shape=(self.state_dim,), dtype=np.uint8
         )
-        #
-
-        # self.action_space = gym.spaces.Discrete(3, start=-1)
-        # TODO change with MultiDiscrete env
+        # TODO add option with MultiDiscrete env to use dqn
         # self.action_space = gym.spaces.MultiDiscrete(3, start=-1)
-        # self.action_space = gym.spaces.Box(low=np.ones(self.action_dim) * -1, high=np.ones(self.action_dim), dtype=np.int_)
-        self.action_space = gym.spaces.Box(
-            low=-1, high=1, shape=(self.action_dim,)
-        )  # -1, 0 or 1
+        # self.action_space = gym.spaces.Box(low=np.ones(self.action_dim) * -1, high=np.ones(self.action_dim), dtype=np.int_) # -1, 0 or 1
+        self.action_space = gym.spaces.Box(low=-1, high=1, shape=(self.action_dim,))
 
     def reset(self) -> np.ndarray:
         self.time = self.lookback - 1
