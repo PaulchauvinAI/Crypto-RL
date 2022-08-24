@@ -9,7 +9,6 @@ from meta.data_processor import DataProcessor
 from meta.env_crypto_trading.env_multiple_crypto import CryptoEnv
 
 # install talib https://gist.github.com/brunocapelao/ed1b4f566fccf630e1fb749e5992e964
-# DRL models from ElegantRL: https://github.com/AI4Finance-Foundation/ElegantRL
 # set up tensorboard:  tensorboard dev upload --logdir ./tensorboard_log
 
 
@@ -128,7 +127,7 @@ def main(
     """
     model name must be in {"a2c": A2C, "ddpg": DDPG, "td3": TD3, "sac": SAC, "ppo": PPO}
     time interval must be in ['1m', '5m', '15m', '30m', '60m', '120m', '1d', '1w', '1M']
-    drllib is eather stable_baselines3, elegantrl, or rllib
+    drllib is eather stable_baselines3 or rllib
     """
     # 1e5 => 10min to save models.
 
@@ -154,7 +153,7 @@ def main(
         env=CryptoEnv,
         model_name=model_name,
         current_working_dir=current_working_dir,
-        break_step=5e4,  # only for elegantrl
+        break_step=5e4,  
         reward_type=reward_type,
         use_wandb=use_wandb,
         if_vix=False,

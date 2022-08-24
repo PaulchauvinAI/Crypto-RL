@@ -1,15 +1,12 @@
 # Requirements
-
 alpaca_trade_api>=2.1.0
 ccxt==1.90.41
-elegantrl
 fire
 wandb
 
 # market data & paper trading API
 exchange_calendars==4.1.1
 gputil==1.4.0
-gym==0.24.1
 jqdatasdk==1.8.10
 lz4==4.0.1
 
@@ -37,7 +34,7 @@ setuptools==63.1.0
 stable-baselines3[extra]==1.5.0
 stockstats==0.4.1
 tensorboardX==2.5.1
-vectorbt[full]==0.23.3
 wheel==0.37.1
 wrds==3.1.1
 yfinance==0.1.72
+TA-Lib

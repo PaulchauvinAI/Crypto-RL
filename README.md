@@ -1,10 +1,10 @@
-# FinRL-Meta: A Universe of Market Environments and Benchmarks for Data-Driven Financial Reinforcement Learning
+# Crypto-RL: A simple proof of concept for crypto currency trading with reinforcement learning.
 
 
 This repo is a fork from FinRL-Meta  ([website](https://finrl.readthedocs.io/en/latest/finrl_meta/background.html)) that builds a universe of market environments for data-driven financial reinforcement learning. This fork foccuses on the trading of crypto assets using deep RL methods.
 
 
-## Our Goals
+## Goals
 
 + To reduce the simulation-reality gap: existing works use backtesting on historical data, while the actual performance may be quite different.
 + To reduce the data pre-processing burden, so that quants can focus on developing and optimizing strategies.
@@ -52,7 +52,6 @@ Such a unified pipeline also allows fair comparisons among different algorithms.
 
 - Add the possibility to trade new assets like futures.
 - Add other reward functions.
-- 
 
 ## To use it
 Right now only the following models are available: 
@@ -71,6 +70,8 @@ and the time_interval to trade the asset must be in:
 ```
 pip install -r requirements.txt
 ```
+If you are not able to install talib follow steps at https://mrjbq7.github.io/ta-lib/install.html
+
 
 ### Training
 ```
